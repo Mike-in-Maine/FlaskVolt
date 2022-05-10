@@ -2,6 +2,11 @@ from flask import Flask, render_template, url_for, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from flask_wtf import FlaskForm
+from wtforms import FileField, SubmitField, StringField
+from wtforms.validators import DataRequired
+from werkzeug.utils import secure_filename
+import os
 
 #from __future__ import print_function
 import fitz
@@ -12,6 +17,18 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 app.config['IMAGE_UPLOADS'] = "C:/Users/gratt/PycharmProjects/FlaskVolt/templates"
 db = SQLAlchemy(app)
+app.config['SECRET_KEY'] = 'secretkey'
+app.config['UPLOAD_FOLDER'] = 'static/files'
+
+
+class UploadFileForm(FlaskForm):
+    file = FileField("File")
+    submit = SubmitField("Upload File")
+
+class NamerForm(FlaskForm):
+    name = StringField("Whats your name")
+    file = FileField("File")
+    submit = SubmitField("Submit")
 
 class Todo(db.Model):
     id = db.Column(db.Integer, primary_key = True)
@@ -25,18 +42,8 @@ class Todo(db.Model):
 
 @app.route('/',methods=['POST', 'GET'])
 def index():
-    if request.method == "POST":
-        print("request")
-        if request.files:
 
-            image = request.files['pdf']
-            image.save(os.path.join(app.config['IMAGE_UPLOADS'], image.filename))
-            print("image saved")
-
-            return redirect(request.url)
-    return render_template('sj.html')
-    pdf_to_jpg()
-    #return render_template('index.html')
+    return render_template('index.html')
 
 @app.route('/home')
 def home():
@@ -52,8 +59,34 @@ def fake_admin2():
 
 @app.route('/sj',methods=['POST', 'GET'])
 def sj():
+    name = None
+    form = NamerForm()
+    file = UploadFileForm()
+    if form.validate_on_submit():
+        name = form.name.data
+        filename = file.file
+        form.name.data = ''
 
-    return render_template('sj.html')
+    return render_template('sj.html', form=form, name = name)
+
+    #if request.method == "POST":
+    #    print("request")
+    #    if request.files:
+
+    #        image = request.files['pdf']
+    #        print(image)
+    #        print("Creating a directory.")
+
+    #        dir_name = "C:/Users/gratt/PycharmProjects/FlaskVolt/jpg-converted"
+    #        os.chmod("C:/Users/gratt/PycharmProjects/FlaskVolt/", 0o777)
+    #        image.save(dir_name)
+    #        #image.save('C:/Users/gratt/PycharmProjects/FlaskVolt', image.filename)
+    #        print("image saved")
+
+    #        return redirect(request.url)
+
+
+    pdf_to_jpg()
     #pdf_to_jpg()
 
 
